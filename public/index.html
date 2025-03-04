@@ -3,11 +3,9 @@
 
 <head>
   <meta charset="UTF-8">
-  <title>动态表格示例 - 带拖拽列</title>
-  <!-- 引入 Bootstrap CSS -->
+  <title>Linguistable</title>
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-  <!-- 引入 Bootstrap Icons -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
   <style>
     th,
     td {
@@ -16,24 +14,20 @@
       vertical-align: middle;
     }
 
-    /* 固定拖拽列宽度 */
     .drag-col {
       width: 40px;
     }
 
-    /* 删除按钮所在单元格 */
     .delete-col {
       width: 120px;
     }
 
-    /* 表头和拖拽列样式 */
     thead th,
     tbody td:first-child {
       background-color: #f8f9fa;
       color: #212529;
     }
 
-    /* 拖拽时的占位样式 */
     .sortable-ghost {
       opacity: 0.4;
     }
@@ -42,68 +36,110 @@
       background-color: #e0e0e0;
     }
 
-    /* 取消鼠标悬停时的颜色变化 */
     .table-hover tbody tr:hover {
       background-color: transparent !important;
+    }
+
+    /* Dialog styles */
+    .dialog {
+      display: none;
+      position: fixed;
+      top: 100px;
+      left: 100px;
+      right: 100px;
+      bottom: 100px;
+      background: white;
+      padding: 20px;
+      border-radius: 5px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+      overflow: auto;
+    }
+
+    .overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+    }
+
+    .language-list {
+      max-height: calc(100vh - 300px);
+      overflow-y: auto;
+      border: 1px solid #ccc;
+      padding: 5px;
     }
   </style>
 </head>
 
 <body class="p-4">
   <div class="container">
-    <h1 class="mb-4">动态表格示例 - 带拖拽列</h1>
-    <!-- 按钮组 -->
+    <h1 class="mb-4">Linguistable</h1>
     <div class="mb-3">
-      <button class="btn btn-primary mr-2" onclick="addRow()">添加行</button>
-      <button class="btn btn-success mr-2" onclick="addColumn()">添加列</button>
+      <button class="btn btn-primary mr-2" onclick="addRow()">Add Row</button>
+      <button class="btn btn-success mr-2" onclick="addColumn()">Add Column</button>
     </div>
-    <!-- 表格：增加拖拽列 -->
     <table id="dynamicTable" class="table table-bordered table-hover">
       <thead>
         <tr>
-          <!-- 拖拽列 -->
           <th class="drag-col"></th>
-          <!-- 内容列：两个下拉选择框 -->
           <th>
-            <select class="form-control">
-              <option>选项1</option>
-              <option>选项2</option>
-              <option>选项3</option>
+            <select class="form-control" onchange="handleColumnSelect(this)">
+              <option value="it">Italian</option>
+              <option value="pt">Portuguese (Brazil)</option>
+              <optgroup label="---------" class="divider"></optgroup>
+              <option value="choose">Choose a language</option>
+              <option value="delete">Delete this column</option>
             </select>
           </th>
           <th>
-            <select class="form-control">
-              <option>选项A</option>
-              <option>选项B</option>
-              <option>选项C</option>
+            <select class="form-control" onchange="handleColumnSelect(this)">
+              <option value="pt">Portuguese (Brazil)</option>
+              <option value="it">Italian</option>
+              <optgroup label="---------" class="divider"></optgroup>
+              <option value="choose">Choose a language</option>
+              <option value="delete">Delete this column</option>
             </select>
           </th>
-          <!-- 操作列 -->
           <th class="delete-col">操作</th>
         </tr>
       </thead>
       <tbody>
         <tr>
-          <!-- 拖拽单元格 -->
           <td class="drag-col"><span class="drag-handle" style="cursor: move;">☰</span></td>
-          <!-- 内容单元格 -->
-          <td contenteditable="true">单元格</td>
-          <td contenteditable="true">单元格</td>
-          <!-- 删除按钮 -->
+          <td contenteditable="true">Click to edit</td>
+          <td contenteditable="true">Click to edit</td>
           <td class="delete-col">
-            <button class="btn btn-danger btn-sm" onclick="deleteThisRow(this)">
-              <i class="bi bi-trash"></i>
-            </button>
+            <button class="btn btn-danger btn-sm" onclick="deleteThisRow(this)"><i class="bi bi-trash"></i></button>
           </td>
         </tr>
       </tbody>
     </table>
   </div>
 
-  <!-- 引入 SortableJS -->
+  <!-- Language Selection Dialog -->
+  <div class="overlay" id="overlay" onclick="closeDialog()"></div>
+  <div class="dialog bg-light p-4 rounded shadow" id="languageDialog">
+    <button class="close" onclick="closeDialog()">&times;</button>
+    <h3 class="mb-3">选择语言</h3>
+    <input type="text" id="search" class="form-control mb-2" placeholder="搜索语言" oninput="filterLanguages()">
+    <div class="list-group language-list" id="languageList">
+      <button class="list-group-item list-group-item-action" onclick="selectLanguage('中文')">中文</button>
+      <button class="list-group-item list-group-item-action" onclick="selectLanguage('English')">English</button>
+      <button class="list-group-item list-group-item-action" onclick="selectLanguage('Français')">Français</button>
+      <button class="list-group-item list-group-item-action" onclick="selectLanguage('Español')">Español</button>
+      <button class="list-group-item list-group-item-action" onclick="selectLanguage('Deutsch')">Deutsch</button>
+      <button class="list-group-item list-group-item-action" onclick="selectLanguage('日本語')">日本語</button>
+      <button class="list-group-item list-group-item-action" onclick="selectLanguage('한국어')">한국어</button>
+      <button class="list-group-item list-group-item-action" onclick="selectLanguage('Русский')">Русский</button>
+    </div>
+  </div>
+
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
   <script>
-    // 初始化 SortableJS，指定拖拽把手为 .drag-handle
+    // Table Behaviour
     var tbody = document.querySelector("#dynamicTable tbody");
     Sortable.create(tbody, {
       animation: 150,
@@ -112,57 +148,202 @@
       handle: '.drag-handle'
     });
 
-    // 添加行：新行包含拖拽单元格、内容单元格（数量 = 表头总单元格数 - 2）和删除单元格
     function addRow() {
       const tableBody = document.querySelector("#dynamicTable tbody");
       const headerRow = document.querySelector("#dynamicTable thead tr");
-      // 表头总单元格数包括：拖拽列 + 内容列 + 删除列
       const contentCellsCount = headerRow.cells.length - 2;
       const newRow = tableBody.insertRow(-1);
 
-      // 创建拖拽单元格
       let dragCell = newRow.insertCell(0);
       dragCell.className = "drag-col";
       dragCell.innerHTML = '<span class="drag-handle" style="cursor: move;">☰</span>';
 
-      // 添加内容单元格
       for (let i = 0; i < contentCellsCount; i++) {
         let cell = newRow.insertCell(-1);
         cell.contentEditable = "true";
-        cell.innerText = "单元格";
+        cell.innerText = "Click to edit";
       }
 
-      // 添加删除按钮单元格
       let deleteCell = newRow.insertCell(-1);
       deleteCell.className = "delete-col";
       deleteCell.innerHTML = '<button class="btn btn-danger btn-sm" onclick="deleteThisRow(this)"><i class="bi bi-trash"></i></button>';
     }
 
-    // 添加列：在拖拽列和删除列之间添加新内容列
     function addColumn() {
       const headerRow = document.querySelector("#dynamicTable thead tr");
-      // 在最后一个单元格之前插入新列（不改变拖拽列）
       let newHeaderCell = document.createElement("th");
       let select = document.createElement("select");
       select.className = "form-control";
-      select.innerHTML = '<option>选项1</option><option>选项2</option><option>选项3</option>';
+      select.innerHTML = '<option value="choose">Choose a language</option><option value="delete">Delete this column</option>';
+      select.setAttribute("onchange", "handleColumnSelect(this)");
       newHeaderCell.appendChild(select);
       headerRow.insertBefore(newHeaderCell, headerRow.lastElementChild);
 
-      // 对于表体中的每一行，在删除列前插入新单元格
       const tableBody = document.querySelector("#dynamicTable tbody");
       for (let row of tableBody.rows) {
         let newCell = row.insertCell(row.cells.length - 1);
         newCell.contentEditable = "true";
-        newCell.innerText = "单元格";
+        newCell.innerText = "Click to edit";
       }
     }
 
-    // 删除行：删除当前所在的行
     function deleteThisRow(button) {
       const row = button.parentNode.parentNode;
       row.parentNode.removeChild(row);
     }
+
+    function handleColumnSelect(selectElement) {
+      if (selectElement.value === "delete") {
+        let colIndex = selectElement.parentNode.cellIndex;
+        let table = document.getElementById("dynamicTable");
+        for (let row of table.rows) {
+          row.deleteCell(colIndex);
+        }
+      } else if (selectElement.value === "choose") {
+        // Show language selection dialog if "Choose a language" is selected
+        openDialog();
+      }
+    }
+
+    document.addEventListener("focusin", function (event) {
+      if (event.target.contentEditable === "true") {
+        // Select all text
+        const range = document.createRange();
+        const selection = window.getSelection();
+        range.selectNodeContents(event.target);
+        selection.removeAllRanges();
+        selection.addRange(range);
+      }
+    });
+
+    document.addEventListener("keydown", function (event) {
+      if (event.key === "Tab") {
+        const activeElement = document.activeElement;
+
+        if (activeElement.contentEditable === "true") {
+          event.preventDefault();
+
+          const currentCell = activeElement;
+          const currentRow = currentCell.parentElement;
+          const columnIndex = [...currentRow.cells].indexOf(currentCell);
+          const tableBody = document.querySelector("#dynamicTable tbody");
+
+          // 检查是否是最后一行
+          const isLastRow = currentRow === tableBody.rows[tableBody.rows.length - 1];
+
+          if (isLastRow) {
+            // 新建一行
+            addRow();
+
+            // 获取新行并聚焦第一个单元格
+            const newRow = tableBody.rows[tableBody.rows.length - 1];
+            const newCell = newRow.cells[columnIndex];
+            newCell.focus();
+
+            // 选择所有文本
+            const range = document.createRange();
+            const selection = window.getSelection();
+            range.selectNodeContents(newCell);
+            selection.removeAllRanges();
+            selection.addRange(range);
+          } else {
+            let targetRow = event.shiftKey ? currentRow.previousElementSibling : currentRow.nextElementSibling;
+
+            // 跳到下一行的单元格
+            while (targetRow && targetRow.cells[columnIndex].classList.contains("drag-col")) {
+              targetRow = event.shiftKey ? targetRow.previousElementSibling : targetRow.nextElementSibling;
+            }
+
+            if (targetRow) {
+              const targetCell = targetRow.cells[columnIndex];
+              targetCell.focus();
+
+              // 选择所有文本
+              const range = document.createRange();
+              const selection = window.getSelection();
+              range.selectNodeContents(targetCell);
+              selection.removeAllRanges();
+              selection.addRange(range);
+            }
+          }
+        }
+      }
+    });
+  </script>
+  <script>
+    // Dialog functionality
+    function openDialog() {
+      document.getElementById('overlay').style.display = 'block';
+      document.getElementById('languageDialog').style.display = 'block';
+    }
+
+    function closeDialog() {
+      document.getElementById('overlay').style.display = 'none';
+      document.getElementById('languageDialog').style.display = 'none';
+    }
+
+    function selectLanguage(language) {
+      alert('您选择了：' + language);
+      closeDialog();
+    }
+
+    function filterLanguages() {
+      let input = document.getElementById('search').value.toLowerCase();
+      let languages = document.querySelectorAll('.language-list button');
+      languages.forEach(lang => {
+        if (lang.textContent.toLowerCase().includes(input)) {
+          lang.style.display = '';
+        } else {
+          lang.style.display = 'none';
+        }
+      });
+    }
+  </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.4.0/axios.min.js"></script>
+  <script>
+    async function translateText(text, fromLang, toLang) {
+      if (text === "Click to edit") {
+        return text;
+      } else {
+        try {
+          const response = await axios.post("/translate", { text, fromLang, toLang });
+          return response.data.translatedText;
+        } catch (error) {
+          console.error("Translation error:", error);
+          return null;
+        }
+      }
+    }
+
+    document.querySelector("#dynamicTable").addEventListener("focusout", async function (event) {
+      let targetCell = event.target;
+
+      if (targetCell.contentEditable === "true") {
+        let text = targetCell.innerText.trim();
+        if (!text) return;
+
+        let currentRow = targetCell.parentElement;
+        let columnIndex = [...currentRow.cells].indexOf(targetCell);
+        let targetColumnIndex = columnIndex + 1;
+        if (currentRow.cells[targetColumnIndex]) {
+          currentRow.cells[targetColumnIndex].innerText = "Translating";
+        }
+
+        let headerRow = document.querySelector("#dynamicTable thead tr");
+        let selectedLanguage = headerRow.cells[columnIndex].querySelector("select")?.value || "en";
+
+        let translatedText = await translateText(text, "it", "pt");
+        if (translateText === null) {
+          if (currentRow.cells[targetColumnIndex]) {
+            currentRow.cells[targetColumnIndex].innerText = "Error";
+          }
+        } else {
+          if (currentRow.cells[targetColumnIndex]) {
+            currentRow.cells[targetColumnIndex].innerText = translatedText;
+          }
+        }
+      }
+    });
   </script>
 </body>
 

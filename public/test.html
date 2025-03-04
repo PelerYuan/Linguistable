@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>语言选择对话框</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        .dialog { 
+            display: none; 
+            position: fixed; 
+            top: 100px; 
+            left: 100px; 
+            right: 100px; 
+            bottom: 100px; 
+            background: white; 
+            padding: 20px; 
+            border-radius: 5px; 
+            box-shadow: 0 0 10px rgba(0,0,0,0.2); 
+            overflow: auto;
+        }
+        .overlay { 
+            display: none; 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            background: rgba(0,0,0,0.5); 
+        }
+        .language-list { 
+            max-height: calc(100vh - 300px); 
+            overflow-y: auto; 
+            border: 1px solid #ccc; 
+            padding: 5px; 
+        }
+    </style>
+</head>
+<body class="container text-center mt-5">
+    <button class="btn btn-primary" onclick="openDialog()">选择语言</button>
+    <div class="overlay" id="overlay" onclick="closeDialog()"></div>
+    <div class="dialog bg-light p-4 rounded shadow" id="languageDialog">
+        <button class="close" onclick="closeDialog()">&times;</button>
+        <h3 class="mb-3">选择语言</h3>
+        <input type="text" id="search" class="form-control mb-2" placeholder="搜索语言" oninput="filterLanguages()">
+        <div class="list-group language-list" id="languageList">
+            <button class="list-group-item list-group-item-action" onclick="selectLanguage('中文')">中文</button>
+            <button class="list-group-item list-group-item-action" onclick="selectLanguage('English')">English</button>
+            <button class="list-group-item list-group-item-action" onclick="selectLanguage('Français')">Français</button>
+            <button class="list-group-item list-group-item-action" onclick="selectLanguage('Español')">Español</button>
+            <button class="list-group-item list-group-item-action" onclick="selectLanguage('Deutsch')">Deutsch</button>
+            <button class="list-group-item list-group-item-action" onclick="selectLanguage('日本語')">日本語</button>
+            <button class="list-group-item list-group-item-action" onclick="selectLanguage('한국어')">한국어</button>
+            <button class="list-group-item list-group-item-action" onclick="selectLanguage('Русский')">Русский</button>
+        </div>
+    </div>
+
+    <script>
+        function openDialog() {
+            document.getElementById('overlay').style.display = 'block';
+            document.getElementById('languageDialog').style.display = 'block';
+        }
+        function closeDialog() {
+            document.getElementById('overlay').style.display = 'none';
+            document.getElementById('languageDialog').style.display = 'none';
+        }
+        function selectLanguage(language) {
+            alert('您选择了：' + language);
+            closeDialog();
+        }
+        function filterLanguages() {
+            let input = document.getElementById('search').value.toLowerCase();
+            let languages = document.querySelectorAll('.language-list button');
+            languages.forEach(lang => {
+                if (lang.textContent.toLowerCase().includes(input)) {
+                    lang.style.display = '';
+                } else {
+                    lang.style.display = 'none';
+                }
+            });
+        }
+    </script>
+</body>
+</html>
