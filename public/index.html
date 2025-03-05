@@ -127,262 +127,436 @@
     <h3 class="mb-3">选择语言</h3>
     <input type="text" id="search" class="form-control mb-2" placeholder="搜索语言" oninput="filterLanguages()">
     <div class="list-group language-list" id="languageList">
-      <button class="list-group-item list-group-item-action" onclick="selectLanguage('中文')">中文</button>
-      <button class="list-group-item list-group-item-action" onclick="selectLanguage('English')">English</button>
-      <button class="list-group-item list-group-item-action" onclick="selectLanguage('Français')">Français</button>
-      <button class="list-group-item list-group-item-action" onclick="selectLanguage('Español')">Español</button>
-      <button class="list-group-item list-group-item-action" onclick="selectLanguage('Deutsch')">Deutsch</button>
-      <button class="list-group-item list-group-item-action" onclick="selectLanguage('日本語')">日本語</button>
-      <button class="list-group-item list-group-item-action" onclick="selectLanguage('한국어')">한국어</button>
-      <button class="list-group-item list-group-item-action" onclick="selectLanguage('Русский')">Русский</button>
     </div>
-  </div>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.4.0/axios.min.js"></script>
-  <script>
-    // 全局变量，用于存储触发“choose”操作的 select 元素引用
-    let currentSelect = null;
-
-    // Table Behaviour
-    var tbody = document.querySelector("#dynamicTable tbody");
-    Sortable.create(tbody, {
-      animation: 150,
-      ghostClass: 'sortable-ghost',
-      chosenClass: 'sortable-chosen',
-      handle: '.drag-handle'
-    });
-
-    function addRow() {
-      const tableBody = document.querySelector("#dynamicTable tbody");
-      const headerRow = document.querySelector("#dynamicTable thead tr");
-      const contentCellsCount = headerRow.cells.length - 2;
-      const newRow = tableBody.insertRow(-1);
-
-      let dragCell = newRow.insertCell(0);
-      dragCell.className = "drag-col";
-      dragCell.innerHTML = '<span class="drag-handle" style="cursor: move;">☰</span>';
-
-      for (let i = 0; i < contentCellsCount; i++) {
-        let cell = newRow.insertCell(-1);
-        cell.contentEditable = "true";
-        cell.innerText = "Click to edit";
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.4.0/axios.min.js"></script>
+    <script>
+      // 全局变量，用于存储触发“choose”操作的 select 元素引用
+      let currentSelect = null;
+      // 语言列表
+      let languages = {
+        "Acehnese (Latin)": "ace",
+        "Afrikaans": "af",
+        "Albanian": "sq",
+        "Amharic": "am",
+        "Arabic": "ar",
+        "Arabic (Egyptian)": "arz",
+        "Arabic (Moroccan)": "ary",
+        "Arabic (Romanized)": "arb",
+        "Armenian": "hy",
+        "Assamese": "as",
+        "Asturian": "ast",
+        "Azerbaijani": "az",
+        "Balinese": "ban",
+        "Bangla": "bn",
+        "Bashkir": "ba",
+        "Basque": "eu",
+        "Batak Toba": "bbc",
+        "Belarusian": "be",
+        "Bhojpuri": "bho",
+        "Bikol": "bik",
+        "Bodo": "brx",
+        "Bosnian": "bs",
+        "Bulgarian": "bg",
+        "Cantonese (Traditional)": "yue",
+        "Catalan": "ca",
+        "Cebuano": "ceb",
+        "Chhattisgarhi": "hne",
+        "Chinese (Literary)": "lzh",
+        "Chinese Simplified": "zh-Hans",
+        "Chinese Traditional": "zh-Hant",
+        "Corsican": "co",
+        "Croatian": "hr",
+        "Czech": "cs",
+        "Danish": "da",
+        "Dari": "prs",
+        "Divehi": "dv",
+        "Dogri": "doi",
+        "Dutch": "nl",
+        "English": "en",
+        "English (United Kingdom)": "en-GB",
+        "Esperanto": "epo",
+        "Estonian": "et",
+        "Faroese": "fo",
+        "Fijian": "fj",
+        "Filipino": "fil",
+        "Finnish": "fi",
+        "French": "fr",
+        "French (Canada)": "fr-CA",
+        "Frisian": "fy",
+        "Friulian": "fur",
+        "Galician": "gl",
+        "Ganda": "lug",
+        "Georgian": "ka",
+        "German": "de",
+        "Greek": "el",
+        "Gujarati": "gu",
+        "Haitian Creole": "ht",
+        "Hausa": "ha",
+        "Hebrew": "he",
+        "Hiligaynon": "hil",
+        "Hindi": "hi",
+        "Hmong Daw": "mww",
+        "Hungarian": "hu",
+        "Iban": "iba",
+        "Icelandic": "is",
+        "Igbo": "ig",
+        "Ilocano": "ilo",
+        "Indonesian": "id",
+        "Inuinnaqtun": "ikt",
+        "Inuktitut": "iu",
+        "Inuktitut (Latin)": "iu-Latn",
+        "Irish": "ga",
+        "Italian": "it",
+        "Jamaican Patois": "jam",
+        "Japanese": "ja",
+        "Javanese": "jav",
+        "Kabuverdianu": "kea",
+        "Kannada": "kn",
+        "Kapampangan": "pam",
+        "Kashmiri": "ks",
+        "Kazakh": "kk",
+        "Khmer": "km",
+        "Kinyarwanda": "rw",
+        "Klingon (Latin)": "tlh-Latn",
+        "Konkani": "gom",
+        "Korean": "ko",
+        "Krio": "kri",
+        "Kurdish (Central)": "ku",
+        "Kurdish (Northern)": "kmr",
+        "Kyrgyz": "ky",
+        "Lao": "lo",
+        "Latin": "la",
+        "Latvian": "lv",
+        "Ligurian (Genoese)": "lij",
+        "Limburgish": "lim",
+        "Lingala": "ln",
+        "Lithuanian": "lt",
+        "Lombard": "lmo",
+        "Lower Sorbian": "dsb",
+        "Luxembourgish": "lb",
+        "Macedonian": "mk",
+        "Maithili": "mai",
+        "Malagasy": "mg",
+        "Malay": "ms",
+        "Malayalam": "ml",
+        "Maltese": "mt",
+        "Marathi": "mr",
+        "Marwari": "mwr",
+        "Mauritian Creole": "mfe",
+        "Minangkabau (Latin)": "min",
+        "Mongolian (Cyrillic)": "mn-Cyrl",
+        "Mongolian (Traditional)": "mn-Mong",
+        "Myanmar (Burmese)": "my",
+        "Māori": "mi",
+        "Nepali": "ne",
+        "Norwegian": "nb",
+        "Norwegian Nynorsk": "nno",
+        "Nyanja": "nya",
+        "Occitan": "oc",
+        "Odia": "or",
+        "Papiamento": "pap",
+        "Pashto": "ps",
+        "Persian": "fa",
+        "Polish": "pl",
+        "Portuguese (Brazil)": "pt",
+        "Portuguese (Portugal)": "pt-PT",
+        "Punjabi": "pa",
+        "Punjabi (Shahmukhi)": "pnb",
+        "Querétaro Otomi": "otq",
+        "Romanian": "ro",
+        "Rundi": "run",
+        "Russian": "ru",
+        "Samoan": "sm",
+        "Sanskrit": "sa",
+        "Sardinian": "srd",
+        "Serbian (Cyrillic)": "sr-Cyrl",
+        "Serbian (Latin)": "sr-Latn",
+        "Sesotho": "st",
+        "Sesotho sa Leboa": "nso",
+        "Setswana": "tn",
+        "Seychelles French Creole": "crs",
+        "Shona": "sn",
+        "Sicilian": "scn",
+        "Sindhi": "sd",
+        "Sinhala": "si",
+        "Slovak": "sk",
+        "Slovenian": "sl",
+        "Somali": "so",
+        "Spanish": "es",
+        "Sundanese": "su",
+        "Swahili": "sw",
+        "Swedish": "sv",
+        "Tahitian": "ty",
+        "Tajik": "tgk",
+        "Tamil": "ta",
+        "Tatar": "tt",
+        "Telugu": "te",
+        "Tetum": "tet",
+        "Thai": "th",
+        "Tibetan": "bo",
+        "Tigrinya": "ti",
+        "Tok Pisin": "tpi",
+        "Tongan": "to",
+        "Turkish": "tr",
+        "Turkmen": "tk",
+        "Ukrainian": "uk",
+        "Upper Sorbian": "hsb",
+        "Urdu": "ur",
+        "Uyghur": "ug",
+        "Uzbek (Latin)": "uz",
+        "Venetian": "vec",
+        "Vietnamese": "vi",
+        "Waray": "war",
+        "Welsh": "cy",
+        "Xhosa": "xh",
+        "Yiddish (Eastern)": "ydd",
+        "Yoruba": "yo",
+        "Yucatec Maya": "yua",
+        "Zulu": "zu"
       }
-
-      let deleteCell = newRow.insertCell(-1);
-      deleteCell.className = "delete-col";
-      deleteCell.innerHTML = '<button class="btn btn-danger btn-sm" onclick="deleteThisRow(this)"><i class="bi bi-trash"></i></button>';
-    }
-
-    function addColumn() {
-      const headerRow = document.querySelector("#dynamicTable thead tr");
-      let newHeaderCell = document.createElement("th");
-      let select = document.createElement("select");
-      select.className = "form-control";
-      select.innerHTML = '<option value="choose">Choose a language</option><option value="delete">Delete this column</option>';
-      select.setAttribute("onchange", "handleColumnSelect(this)");
-      newHeaderCell.appendChild(select);
-      headerRow.insertBefore(newHeaderCell, headerRow.lastElementChild);
-
-      const tableBody = document.querySelector("#dynamicTable tbody");
-      for (let row of tableBody.rows) {
-        let newCell = row.insertCell(row.cells.length - 1);
-        newCell.contentEditable = "true";
-        newCell.innerText = "Click to edit";
-      }
-    }
-
-    function deleteThisRow(button) {
-      const row = button.parentNode.parentNode;
-      row.parentNode.removeChild(row);
-    }
-
-    function handleColumnSelect(selectElement) {
-      if (selectElement.value === "delete") {
-        let colIndex = selectElement.parentNode.cellIndex;
-        let table = document.getElementById("dynamicTable");
-        for (let row of table.rows) {
-          row.deleteCell(colIndex);
+      // 动态加载所有语言按钮到对话框中
+      function loadLanguages() {
+        const languageListDiv = document.getElementById('languageList');
+        languageListDiv.innerHTML = ''; // 清空已有内容
+        for (const [languageName, code] of Object.entries(languages)) {
+          const btn = document.createElement('button');
+          btn.className = 'list-group-item list-group-item-action';
+          btn.textContent = languageName;
+          btn.onclick = function () {
+            selectLanguage(code);
+          };
+          languageListDiv.appendChild(btn);
         }
-      } else if (selectElement.value === "choose") {
-        // Show language selection dialog if "Choose a language" is selected
-        currentSelect = selectElement;
-        openDialog();
       }
-    }
 
-    document.addEventListener("focusin", function (event) {
-      if (event.target.contentEditable === "true") {
-        // Select all text
-        const range = document.createRange();
-        const selection = window.getSelection();
-        range.selectNodeContents(event.target);
-        selection.removeAllRanges();
-        selection.addRange(range);
+      // Table Behaviour
+      var tbody = document.querySelector("#dynamicTable tbody");
+      Sortable.create(tbody, {
+        animation: 150,
+        ghostClass: 'sortable-ghost',
+        chosenClass: 'sortable-chosen',
+        handle: '.drag-handle'
+      });
+
+      function addRow() {
+        const tableBody = document.querySelector("#dynamicTable tbody");
+        const headerRow = document.querySelector("#dynamicTable thead tr");
+        const contentCellsCount = headerRow.cells.length - 2;
+        const newRow = tableBody.insertRow(-1);
+
+        let dragCell = newRow.insertCell(0);
+        dragCell.className = "drag-col";
+        dragCell.innerHTML = '<span class="drag-handle" style="cursor: move;">☰</span>';
+
+        for (let i = 0; i < contentCellsCount; i++) {
+          let cell = newRow.insertCell(-1);
+          cell.contentEditable = "true";
+          cell.innerText = "Click to edit";
+        }
+
+        let deleteCell = newRow.insertCell(-1);
+        deleteCell.className = "delete-col";
+        deleteCell.innerHTML = '<button class="btn btn-danger btn-sm" onclick="deleteThisRow(this)"><i class="bi bi-trash"></i></button>';
       }
-    });
 
-    document.addEventListener("keydown", function (event) {
-      if (event.key === "Tab") {
-        const activeElement = document.activeElement;
+      function addColumn() {
+        const headerRow = document.querySelector("#dynamicTable thead tr");
+        let newHeaderCell = document.createElement("th");
+        let select = document.createElement("select");
+        select.className = "form-control";
+        select.innerHTML = '<option value="choose">Choose a language</option><option value="delete">Delete this column</option>';
+        select.setAttribute("onchange", "handleColumnSelect(this)");
+        newHeaderCell.appendChild(select);
+        headerRow.insertBefore(newHeaderCell, headerRow.lastElementChild);
 
-        if (activeElement.contentEditable === "true") {
-          event.preventDefault();
+        const tableBody = document.querySelector("#dynamicTable tbody");
+        for (let row of tableBody.rows) {
+          let newCell = row.insertCell(row.cells.length - 1);
+          newCell.contentEditable = "true";
+          newCell.innerText = "Click to edit";
+        }
+      }
 
-          const currentCell = activeElement;
-          const currentRow = currentCell.parentElement;
-          const columnIndex = [...currentRow.cells].indexOf(currentCell);
-          const tableBody = document.querySelector("#dynamicTable tbody");
+      function deleteThisRow(button) {
+        const row = button.parentNode.parentNode;
+        row.parentNode.removeChild(row);
+      }
 
-          // 检查是否是最后一行
-          const isLastRow = currentRow === tableBody.rows[tableBody.rows.length - 1];
+      function handleColumnSelect(selectElement) {
+        if (selectElement.value === "delete") {
+          let colIndex = selectElement.parentNode.cellIndex;
+          let table = document.getElementById("dynamicTable");
+          for (let row of table.rows) {
+            row.deleteCell(colIndex);
+          }
+        } else if (selectElement.value === "choose") {
+          // Show language selection dialog if "Choose a language" is selected
+          currentSelect = selectElement;
+          openDialog();
+        }
+      }
 
-          if (isLastRow) {
-            // 新建一行
-            addRow();
+      document.addEventListener("focusin", function (event) {
+        if (event.target.contentEditable === "true") {
+          // Select all text
+          const range = document.createRange();
+          const selection = window.getSelection();
+          range.selectNodeContents(event.target);
+          selection.removeAllRanges();
+          selection.addRange(range);
+        }
+      });
 
-            // 获取新行并聚焦第一个单元格
-            const newRow = tableBody.rows[tableBody.rows.length - 1];
-            const newCell = newRow.cells[columnIndex];
-            newCell.focus();
+      document.addEventListener("keydown", function (event) {
+        if (event.key === "Tab") {
+          const activeElement = document.activeElement;
 
-            // 选择所有文本
-            const range = document.createRange();
-            const selection = window.getSelection();
-            range.selectNodeContents(newCell);
-            selection.removeAllRanges();
-            selection.addRange(range);
-          } else {
-            let targetRow = event.shiftKey ? currentRow.previousElementSibling : currentRow.nextElementSibling;
+          if (activeElement.contentEditable === "true") {
+            event.preventDefault();
 
-            // 跳到下一行的单元格
-            while (targetRow && targetRow.cells[columnIndex].classList.contains("drag-col")) {
-              targetRow = event.shiftKey ? targetRow.previousElementSibling : targetRow.nextElementSibling;
-            }
+            const currentCell = activeElement;
+            const currentRow = currentCell.parentElement;
+            const columnIndex = [...currentRow.cells].indexOf(currentCell);
+            const tableBody = document.querySelector("#dynamicTable tbody");
 
-            if (targetRow) {
-              const targetCell = targetRow.cells[columnIndex];
-              targetCell.focus();
+            // 检查是否是最后一行
+            const isLastRow = currentRow === tableBody.rows[tableBody.rows.length - 1];
+
+            if (isLastRow) {
+              // 新建一行
+              addRow();
+
+              // 获取新行并聚焦第一个单元格
+              const newRow = tableBody.rows[tableBody.rows.length - 1];
+              const newCell = newRow.cells[columnIndex];
+              newCell.focus();
 
               // 选择所有文本
               const range = document.createRange();
               const selection = window.getSelection();
-              range.selectNodeContents(targetCell);
+              range.selectNodeContents(newCell);
               selection.removeAllRanges();
               selection.addRange(range);
+            } else {
+              let targetRow = event.shiftKey ? currentRow.previousElementSibling : currentRow.nextElementSibling;
+
+              // 跳到下一行的单元格
+              while (targetRow && targetRow.cells[columnIndex].classList.contains("drag-col")) {
+                targetRow = event.shiftKey ? targetRow.previousElementSibling : targetRow.nextElementSibling;
+              }
+
+              if (targetRow) {
+                const targetCell = targetRow.cells[columnIndex];
+                targetCell.focus();
+
+                // 选择所有文本
+                const range = document.createRange();
+                const selection = window.getSelection();
+                range.selectNodeContents(targetCell);
+                selection.removeAllRanges();
+                selection.addRange(range);
+              }
             }
           }
         }
+      });
+
+      // Dialog functionality
+      function openDialog() {
+        document.getElementById('overlay').style.display = 'block';
+        document.getElementById('languageDialog').style.display = 'block';
       }
-    });
 
-    // Dialog functionality
-    function openDialog() {
-      document.getElementById('overlay').style.display = 'block';
-      document.getElementById('languageDialog').style.display = 'block';
-    }
+      function closeDialog() {
+        document.getElementById('overlay').style.display = 'none';
+        document.getElementById('languageDialog').style.display = 'none';
+      }
 
-    function closeDialog() {
-      document.getElementById('overlay').style.display = 'none';
-      document.getElementById('languageDialog').style.display = 'none';
-    }
-
-    function selectLanguage(language) {
-      if (currentSelect) {
-        // 检查该语言是否已存在
-        let exists = false;
-        for (let i = 0; i < currentSelect.options.length; i++) {
-          if (currentSelect.options[i].value === language) {
-            currentSelect.selectedIndex = i;
-            exists = true;
-            break;
-          }
-        }
-        if (!exists) {
-          // 若不存在，则创建新选项，并尝试插入到 optgroup 分隔符之前
-          let newOption = document.createElement("option");
-          newOption.value = language;
-          newOption.text = language;
-          let inserted = false;
-          for (let i = 0; i < currentSelect.options.length; i++) {
-            if (currentSelect.options[i].tagName === "OPTGROUP") {
-              currentSelect.add(newOption, currentSelect.options[i]);
-              inserted = true;
-              break;
-            }
-          }
-          if (!inserted) {
-            currentSelect.add(newOption);
-          }
-          // 选中新添加的选项
+      function selectLanguage(language) {
+        if (currentSelect) {
+          // 检查该语言是否已存在
+          let exists = false;
           for (let i = 0; i < currentSelect.options.length; i++) {
             if (currentSelect.options[i].value === language) {
               currentSelect.selectedIndex = i;
+              exists = true;
               break;
             }
           }
+          if (!exists) {
+            // 创建新选项，并插入到顶部
+            let newOption = document.createElement("option");
+            newOption.value = language;
+            newOption.text = language;
+            currentSelect.insertBefore(newOption, currentSelect.options[0]);
+            currentSelect.selectedIndex = 0;
+          }
         }
+        closeDialog();
+        currentSelect = null;
       }
-      closeDialog();
-      currentSelect = null;
-    }
 
 
-    function filterLanguages() {
-      let input = document.getElementById('search').value.toLowerCase();
-      let languages = document.querySelectorAll('.language-list button');
-      languages.forEach(lang => {
-        if (lang.textContent.toLowerCase().includes(input)) {
-          lang.style.display = '';
+      function filterLanguages() {
+        let input = document.getElementById('search').value.toLowerCase();
+        let languages = document.querySelectorAll('.language-list button');
+        languages.forEach(lang => {
+          if (lang.textContent.toLowerCase().includes(input)) {
+            lang.style.display = '';
+          } else {
+            lang.style.display = 'none';
+          }
+        });
+      }
+
+      // translate functionalities
+      async function translateText(text, fromLang, toLang) {
+        if (text === "Click to edit") {
+          return text;
         } else {
-          lang.style.display = 'none';
-        }
-      });
-    }
-
-    // translate functionalities
-    async function translateText(text, fromLang, toLang) {
-      if (text === "Click to edit") {
-        return text;
-      } else {
-        try {
-          const response = await axios.post("/translate", { text, fromLang, toLang });
-          return response.data.translatedText;
-        } catch (error) {
-          console.error("Translation error:", error);
-          return null;
+          try {
+            const response = await axios.post("/translate", { text, fromLang, toLang });
+            return response.data.translatedText;
+          } catch (error) {
+            console.error("Translation error:", error);
+            return null;
+          }
         }
       }
-    }
-    async function translateTable() {
-      const table = document.getElementById("dynamicTable");
-      const rows = table.querySelectorAll("tbody tr");
+      async function translateTable() {
+        const table = document.getElementById("dynamicTable");
+        const rows = table.querySelectorAll("tbody tr");
 
-      for (let row of rows) {
-        let cells = row.cells;
-        if (cells.length > 2) {
-          let sourceText = cells[1].innerText; // 第一列文本
-          for (let i = 2; i < cells.length - 1; i++) { // 遍历目标列
-            let fromLang = table.rows[0].cells[1].querySelector("select").value;
-            let toLang = table.rows[0].cells[i].querySelector("select").value;
-            console.log(`${fromLang}, ${toLang}`);
-            if (sourceText !== 'Click to edit') {
-              if (fromLang !== toLang) {
-                let translatedText = await translateText(sourceText, fromLang, toLang);
-                if (translatedText) {
-                  cells[i].innerText = translatedText;
+        for (let row of rows) {
+          let cells = row.cells;
+          if (cells.length > 2) {
+            let sourceText = cells[1].innerText; // 第一列文本
+            for (let i = 2; i < cells.length - 1; i++) { // 遍历目标列
+              let fromLang = table.rows[0].cells[1].querySelector("select").value;
+              let toLang = table.rows[0].cells[i].querySelector("select").value;
+              console.log(`${fromLang}, ${toLang}`);
+              if (sourceText !== 'Click to edit') {
+                if (fromLang !== toLang) {
+                  let translatedText = await translateText(sourceText, fromLang, toLang);
+                  if (translatedText) {
+                    cells[i].innerText = translatedText;
+                  } else {
+                    cells[i].innerText = 'Error! Please retry later!';
+                  }
                 } else {
-                  cells[i].innerText = 'Error! Please retry later!';
+                  cells[i].innerText = sourceText;
                 }
-              } else {
-                cells[i].innerText = sourceText;
               }
             }
           }
         }
       }
-    }
-  </script>
+
+      // 页面加载完成后调用加载函数
+      document.addEventListener('DOMContentLoaded', loadLanguages);
+    </script>
 </body>
 
 </html>
