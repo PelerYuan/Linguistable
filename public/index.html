@@ -79,7 +79,8 @@
     <h1 class="mb-4">Linguistable</h1>
     <div class="mb-3">
       <button class="btn btn-primary mr-2" onclick="addRow()">Add Row</button>
-      <button class="btn btn-success mr-2" onclick="addColumn()">Add Column</button>
+      <button class="btn btn-primary mr-2" onclick="addColumn()">Add Column</button>
+      <button class="btn btn-success mr-2" onclick="translateTable()">Translate</button>
     </div>
     <table id="dynamicTable" class="table table-bordered table-hover">
       <thead>
@@ -103,7 +104,7 @@
               <option value="delete">Delete this column</option>
             </select>
           </th>
-          <th class="delete-col">操作</th>
+          <th class="delete-col"></th>
         </tr>
       </thead>
       <tbody>
@@ -138,7 +139,11 @@
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.4.0/axios.min.js"></script>
   <script>
+    // 全局变量，用于存储触发“choose”操作的 select 元素引用
+    let currentSelect = null;
+
     // Table Behaviour
     var tbody = document.querySelector("#dynamicTable tbody");
     Sortable.create(tbody, {
@@ -201,6 +206,7 @@
         }
       } else if (selectElement.value === "choose") {
         // Show language selection dialog if "Choose a language" is selected
+        currentSelect = selectElement;
         openDialog();
       }
     }
@@ -269,8 +275,7 @@
         }
       }
     });
-  </script>
-  <script>
+
     // Dialog functionality
     function openDialog() {
       document.getElementById('overlay').style.display = 'block';
@@ -283,9 +288,45 @@
     }
 
     function selectLanguage(language) {
-      alert('您选择了：' + language);
+      if (currentSelect) {
+        // 检查该语言是否已存在
+        let exists = false;
+        for (let i = 0; i < currentSelect.options.length; i++) {
+          if (currentSelect.options[i].value === language) {
+            currentSelect.selectedIndex = i;
+            exists = true;
+            break;
+          }
+        }
+        if (!exists) {
+          // 若不存在，则创建新选项，并尝试插入到 optgroup 分隔符之前
+          let newOption = document.createElement("option");
+          newOption.value = language;
+          newOption.text = language;
+          let inserted = false;
+          for (let i = 0; i < currentSelect.options.length; i++) {
+            if (currentSelect.options[i].tagName === "OPTGROUP") {
+              currentSelect.add(newOption, currentSelect.options[i]);
+              inserted = true;
+              break;
+            }
+          }
+          if (!inserted) {
+            currentSelect.add(newOption);
+          }
+          // 选中新添加的选项
+          for (let i = 0; i < currentSelect.options.length; i++) {
+            if (currentSelect.options[i].value === language) {
+              currentSelect.selectedIndex = i;
+              break;
+            }
+          }
+        }
+      }
       closeDialog();
+      currentSelect = null;
     }
+
 
     function filterLanguages() {
       let input = document.getElementById('search').value.toLowerCase();
@@ -298,9 +339,8 @@
         }
       });
     }
-  </script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.4.0/axios.min.js"></script>
-  <script>
+
+    // translate functionalities
     async function translateText(text, fromLang, toLang) {
       if (text === "Click to edit") {
         return text;
@@ -314,36 +354,34 @@
         }
       }
     }
+    async function translateTable() {
+      const table = document.getElementById("dynamicTable");
+      const rows = table.querySelectorAll("tbody tr");
 
-    document.querySelector("#dynamicTable").addEventListener("focusout", async function (event) {
-      let targetCell = event.target;
-
-      if (targetCell.contentEditable === "true") {
-        let text = targetCell.innerText.trim();
-        if (!text) return;
-
-        let currentRow = targetCell.parentElement;
-        let columnIndex = [...currentRow.cells].indexOf(targetCell);
-        let targetColumnIndex = columnIndex + 1;
-        if (currentRow.cells[targetColumnIndex]) {
-          currentRow.cells[targetColumnIndex].innerText = "Translating";
-        }
-
-        let headerRow = document.querySelector("#dynamicTable thead tr");
-        let selectedLanguage = headerRow.cells[columnIndex].querySelector("select")?.value || "en";
-
-        let translatedText = await translateText(text, "it", "pt");
-        if (translateText === null) {
-          if (currentRow.cells[targetColumnIndex]) {
-            currentRow.cells[targetColumnIndex].innerText = "Error";
-          }
-        } else {
-          if (currentRow.cells[targetColumnIndex]) {
-            currentRow.cells[targetColumnIndex].innerText = translatedText;
+      for (let row of rows) {
+        let cells = row.cells;
+        if (cells.length > 2) {
+          let sourceText = cells[1].innerText; // 第一列文本
+          for (let i = 2; i < cells.length - 1; i++) { // 遍历目标列
+            let fromLang = table.rows[0].cells[1].querySelector("select").value;
+            let toLang = table.rows[0].cells[i].querySelector("select").value;
+            console.log(`${fromLang}, ${toLang}`);
+            if (sourceText !== 'Click to edit') {
+              if (fromLang !== toLang) {
+                let translatedText = await translateText(sourceText, fromLang, toLang);
+                if (translatedText) {
+                  cells[i].innerText = translatedText;
+                } else {
+                  cells[i].innerText = 'Error! Please retry later!';
+                }
+              } else {
+                cells[i].innerText = sourceText;
+              }
+            }
           }
         }
       }
-    });
+    }
   </script>
 </body>
 

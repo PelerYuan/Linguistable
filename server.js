@@ -3,6 +3,8 @@ const path = require('path');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const { translate } = require('bing-translate-api');
+const fs = require('fs');
+// const { console } = require('inspector');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -14,51 +16,24 @@ app.use(bodyParser.json());
 // 静态文件目录设置（托管 `public` 文件夹）
 app.use(express.static(path.join(__dirname, 'public')));
 
-const queue = []; // 任务队列
-let isProcessing = false; // 处理标志
+// 读取语言对照表
+const languages = JSON.parse(fs.readFileSync('languages.json', 'utf-8'));
 
-// 每秒执行一个翻译任务
-setInterval(async () => {
-    if (queue.length > 0 && !isProcessing) {
-        isProcessing = true;
-        const task = queue.shift(); // 取出队列中的任务
-        await processTranslation(task);
-        isProcessing = false;
-    }
-}, 1000);
-
-// 处理翻译请求
-app.post('/translate', (req, res) => {
-    const { text, fromLang, toLang } = req.body;
-    if (!text) return res.status(400).json({ error: "No text provided" });
-
-    queue.push({ text, fromLang, toLang, res, retryCount: 0 }); // 加入队列，初始化 retryCount=0
-});
-
-// 处理单个翻译任务
-async function processTranslation(task) {
-    const { text, fromLang, toLang, res, retryCount } = task;
-
+app.post('/translate', async (req, res) => {
     try {
+        const { text, fromLang, toLang } = req.body;
+        console.log(`Translate ${text} from '${fromLang}' to '${toLang}'`);
+        if (!text) return res.status(400).json({ error: "No text provided" });
+        // const fromLangCode = Object.keys(languages).find(key => languages[key] === fromLang);
+        // const toLangCode = Object.keys(languages).find(key => languages[key] === toLang);
         const result = await translate(text, fromLang, toLang);
         res.json({ translatedText: result.translation });
     } catch (error) {
-        console.error(`Translation failed (Attempt ${retryCount + 1}):`, error);
-
-        if (retryCount < 3) { // 最多重试 3 次
-            task.retryCount += 1;
-            console.log(`Retrying in 3 seconds: ${text}, Retry #${task.retryCount}`);
-
-            // 延迟 3 秒后重新加入队列
-            setTimeout(() => {
-                queue.push(task);
-                console.log(`Requeued after 3 seconds: ${text}, Retry #${task.retryCount}`);
-            }, 3000);
-        } else {
-            res.status(500).json({ error: "Translation failed after multiple attempts" });
-        }
+        console.error("Translation error:", error);
+        res.status(500).json({ error: "Translation failed" });
     }
-}
+});
+
 
 // 启动服务器
 app.listen(PORT, () => {
