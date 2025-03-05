@@ -91,6 +91,16 @@
         visibility: visible;
       }
 
+      /* 隐藏删除按钮列 */
+      .delete-col {
+        display: none;
+      }
+
+      /* 隐藏拖拽列 */
+      .drag-col {
+        display: none;
+      }
+
       /* 确保 h1 和表格正确排列 */
       h1 {
         position: absolute;
@@ -105,17 +115,6 @@
         top: 50px;
         left: 0;
       }
-    }
-
-    /* 隐藏删除按钮列 */
-    .delete-col {
-      display: none;
-    }
-
-    /* 隐藏拖拽列 */
-    .drag-col {
-      display: none;
-    }
     }
   </style>
 
@@ -171,8 +170,8 @@
   <div class="overlay" id="overlay" onclick="closeDialog(false)"></div>
   <div class="dialog bg-light p-4 rounded shadow" id="languageDialog">
     <button class="close" onclick="closeDialog(false)">&times;</button>
-    <h3 class="mb-3">选择语言</h3>
-    <input type="text" id="search" class="form-control mb-2" placeholder="搜索语言" oninput="filterLanguages()">
+    <h3 class="mb-3">choose language</h3>
+    <input type="text" id="search" class="form-control mb-2" placeholder="search language" oninput="filterLanguages()">
     <div class="list-group language-list" id="languageList">
     </div>
 
