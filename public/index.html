@@ -87,7 +87,7 @@
         <tr>
           <th class="drag-col"></th>
           <th>
-            <select class="form-control" onchange="handleColumnSelect(this)">
+            <select class="form-control" onclick="handleColumnSelect(this)">
               <option value="it">Italian</option>
               <option value="pt">Portuguese (Brazil)</option>
               <optgroup label="---------" class="divider"></optgroup>
@@ -96,7 +96,7 @@
             </select>
           </th>
           <th>
-            <select class="form-control" onchange="handleColumnSelect(this)">
+            <select class="form-control" onclick="handleColumnSelect(this)">
               <option value="pt">Portuguese (Brazil)</option>
               <option value="it">Italian</option>
               <optgroup label="---------" class="divider"></optgroup>
@@ -121,9 +121,9 @@
   </div>
 
   <!-- Language Selection Dialog -->
-  <div class="overlay" id="overlay" onclick="closeDialog()"></div>
+  <div class="overlay" id="overlay" onclick="closeDialog(false)"></div>
   <div class="dialog bg-light p-4 rounded shadow" id="languageDialog">
-    <button class="close" onclick="closeDialog()">&times;</button>
+    <button class="close" onclick="closeDialog(false)">&times;</button>
     <h3 class="mb-3">选择语言</h3>
     <input type="text" id="search" class="form-control mb-2" placeholder="搜索语言" oninput="filterLanguages()">
     <div class="list-group language-list" id="languageList">
@@ -132,8 +132,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.4.0/axios.min.js"></script>
     <script>
-      // 全局变量，用于存储触发“choose”操作的 select 元素引用
-      let currentSelect = null;
       // 语言列表
       let languages = {
         "Acehnese (Latin)": "ace",
@@ -325,11 +323,13 @@
           btn.className = 'list-group-item list-group-item-action';
           btn.textContent = languageName;
           btn.onclick = function () {
-            selectLanguage(code);
+            selectLanguage(languageName);
           };
           languageListDiv.appendChild(btn);
         }
       }
+      // 页面加载完成后调用加载函数
+      document.addEventListener('DOMContentLoaded', loadLanguages);
 
       // Table Behaviour
       var tbody = document.querySelector("#dynamicTable tbody");
@@ -367,7 +367,7 @@
         let select = document.createElement("select");
         select.className = "form-control";
         select.innerHTML = '<option value="choose">Choose a language</option><option value="delete">Delete this column</option>';
-        select.setAttribute("onchange", "handleColumnSelect(this)");
+        select.setAttribute("onclick", "handleColumnSelect(this)");
         newHeaderCell.appendChild(select);
         headerRow.insertBefore(newHeaderCell, headerRow.lastElementChild);
 
@@ -384,6 +384,8 @@
         row.parentNode.removeChild(row);
       }
 
+      let currentSelect = null;
+      let previousSelectIndex = 0;
       function handleColumnSelect(selectElement) {
         if (selectElement.value === "delete") {
           let colIndex = selectElement.parentNode.cellIndex;
@@ -395,6 +397,9 @@
           // Show language selection dialog if "Choose a language" is selected
           currentSelect = selectElement;
           openDialog();
+        }
+        else {
+          previousSelectIndex = selectElement.selectedIndex;
         }
       }
 
@@ -412,7 +417,6 @@
       document.addEventListener("keydown", function (event) {
         if (event.key === "Tab") {
           const activeElement = document.activeElement;
-
           if (activeElement.contentEditable === "true") {
             event.preventDefault();
 
@@ -420,29 +424,26 @@
             const currentRow = currentCell.parentElement;
             const columnIndex = [...currentRow.cells].indexOf(currentCell);
             const tableBody = document.querySelector("#dynamicTable tbody");
-
-            // 检查是否是最后一行
             const isLastRow = currentRow === tableBody.rows[tableBody.rows.length - 1];
 
-            if (isLastRow) {
-              // 新建一行
+            // 只有在按Tab且当前为最后一行时才新建行
+            if (!event.shiftKey && isLastRow) {
               addRow();
-
-              // 获取新行并聚焦第一个单元格
               const newRow = tableBody.rows[tableBody.rows.length - 1];
               const newCell = newRow.cells[columnIndex];
               newCell.focus();
 
-              // 选择所有文本
+              // 选中单元格内所有文本
               const range = document.createRange();
               const selection = window.getSelection();
               range.selectNodeContents(newCell);
               selection.removeAllRanges();
               selection.addRange(range);
             } else {
+              // 否则根据是否按下Shift决定跳转上一行或下一行
               let targetRow = event.shiftKey ? currentRow.previousElementSibling : currentRow.nextElementSibling;
 
-              // 跳到下一行的单元格
+              // 跳过不需要的单元格（如拖拽列）
               while (targetRow && targetRow.cells[columnIndex].classList.contains("drag-col")) {
                 targetRow = event.shiftKey ? targetRow.previousElementSibling : targetRow.nextElementSibling;
               }
@@ -451,7 +452,7 @@
                 const targetCell = targetRow.cells[columnIndex];
                 targetCell.focus();
 
-                // 选择所有文本
+                // 选中单元格内所有文本
                 const range = document.createRange();
                 const selection = window.getSelection();
                 range.selectNodeContents(targetCell);
@@ -463,15 +464,53 @@
         }
       });
 
+
       // Dialog functionality
       function openDialog() {
         document.getElementById('overlay').style.display = 'block';
         document.getElementById('languageDialog').style.display = 'block';
       }
 
-      function closeDialog() {
+      function closeDialog(selected) {
         document.getElementById('overlay').style.display = 'none';
         document.getElementById('languageDialog').style.display = 'none';
+        // 如果没有选择则退回到之前选择的语言
+        if (!selected) {
+          currentSelect.selectedIndex = previousSelectIndex;
+          console.log(previousSelectIndex);
+        }
+      }
+
+      // 辅助函数：确保 select 中存在分隔线（optgroup 标签，label 为 "---------"）
+      function ensureDivider(selectElement) {
+        let hasDivider = false;
+        for (let i = 0; i < selectElement.options.length; i++) {
+          if (
+            selectElement.options[i].tagName.toUpperCase() === "OPTGROUP" &&
+            selectElement.options[i].label === "---------"
+          ) {
+            hasDivider = true;
+            break;
+          }
+        }
+        if (!hasDivider) {
+          const divider = document.createElement("optgroup");
+          divider.label = "---------";
+          divider.className = "divider";
+          // 尝试在 value 为 "choose" 的选项前插入分隔线
+          let chooseIndex = -1;
+          for (let i = 0; i < selectElement.options.length; i++) {
+            if (selectElement.options[i].value === "choose") {
+              chooseIndex = i;
+              break;
+            }
+          }
+          if (chooseIndex !== -1) {
+            selectElement.insertBefore(divider, selectElement.options[chooseIndex]);
+          } else {
+            selectElement.appendChild(divider);
+          }
+        }
       }
 
       function selectLanguage(language) {
@@ -479,7 +518,7 @@
           // 检查该语言是否已存在
           let exists = false;
           for (let i = 0; i < currentSelect.options.length; i++) {
-            if (currentSelect.options[i].value === language) {
+            if (currentSelect.options[i].value === languages[language]) {
               currentSelect.selectedIndex = i;
               exists = true;
               break;
@@ -488,14 +527,17 @@
           if (!exists) {
             // 创建新选项，并插入到顶部
             let newOption = document.createElement("option");
-            newOption.value = language;
+            newOption.value = languages[language];
             newOption.text = language;
             currentSelect.insertBefore(newOption, currentSelect.options[0]);
             currentSelect.selectedIndex = 0;
           }
+          // 确保下拉菜单中有分隔线
+          ensureDivider(currentSelect);
         }
-        closeDialog();
+        closeDialog(true);
         currentSelect = null;
+        previousSelectIndex = 0;
       }
 
 
@@ -536,8 +578,7 @@
             for (let i = 2; i < cells.length - 1; i++) { // 遍历目标列
               let fromLang = table.rows[0].cells[1].querySelector("select").value;
               let toLang = table.rows[0].cells[i].querySelector("select").value;
-              console.log(`${fromLang}, ${toLang}`);
-              if (sourceText !== 'Click to edit') {
+              if (sourceText !== 'Click to edit' && toLang !== 'delete' && toLang !== 'choose') {
                 if (fromLang !== toLang) {
                   let translatedText = await translateText(sourceText, fromLang, toLang);
                   if (translatedText) {
@@ -553,9 +594,6 @@
           }
         }
       }
-
-      // 页面加载完成后调用加载函数
-      document.addEventListener('DOMContentLoaded', loadLanguages);
     </script>
 </body>
 
