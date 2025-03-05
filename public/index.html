@@ -72,6 +72,53 @@
       padding: 5px;
     }
   </style>
+  <style>
+    @media print {
+
+      /* 隐藏页面中所有内容 */
+      body * {
+        visibility: hidden;
+      }
+
+      h1,
+      h1 * {
+        visibility: visible;
+      }
+
+      /* 仅显示 id 为 dynamicTable 的表格及其子元素 */
+      #dynamicTable,
+      #dynamicTable * {
+        visibility: visible;
+      }
+
+      /* 确保 h1 和表格正确排列 */
+      h1 {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        text-align: center;
+      }
+
+      #dynamicTable {
+        position: absolute;
+        top: 50px;
+        left: 0;
+      }
+    }
+
+    /* 隐藏删除按钮列 */
+    .delete-col {
+      display: none;
+    }
+
+    /* 隐藏拖拽列 */
+    .drag-col {
+      display: none;
+    }
+    }
+  </style>
+
 </head>
 
 <body class="p-4">
